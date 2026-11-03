@@ -201,6 +201,9 @@ function fit() {
   const touch = matchMedia('(pointer: coarse)').matches;
   const mobile = touch && Math.min(innerWidth, innerHeight) < 600;
   document.body.classList.toggle('mobile', mobile);
+  // iOS: адресная строка Safari внизу — меню опускаем ближе к краю (css: body.mobile.ios)
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && touch);
+  document.body.classList.toggle('ios', ios);
   if (mobile) {
     // интерфейс 402 px шириной масштабируем ровно в ширину экрана;
     // макетный статус-бар не нужен (у телефона свой) — поднимаем всё на MOBILE_TOP,

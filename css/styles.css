@@ -124,6 +124,8 @@ body.mobile .statusbar > *, body.mobile .homebar { visibility: hidden; }
 /* ===== Нижнее меню (компонент Navigation) ===== */
 .navbar { position: absolute; left: -2px; bottom: -1px; width: 406px; height: 116px; z-index: 20; }
 .navbar .bg { position: absolute; left: 0; top: 0; width: 424px; height: 140px; }
+/* iOS на весь экран: от подписей меню до низа 16 px вместо 36 (место под полоску «домой» не нужно) */
+body.mobile.ios .navbar { bottom: -20px; }
 .nav-item { position: absolute; top: 0; height: 116px; }
 .nav-item img { position: absolute; top: 40px; width: 24px; height: 24px; }
 .nav-item span { position: absolute; top: 64px; white-space: nowrap; font-size: 10px; line-height: 16px; color: var(--text-light-secondary); }
