@@ -202,11 +202,14 @@ function fit() {
   const mobile = touch && Math.min(innerWidth, innerHeight) < 600;
   document.body.classList.toggle('mobile', mobile);
   if (mobile) {
-    // интерфейс 402 px шириной масштабируем ровно в ширину экрана
+    // интерфейс 402 px шириной масштабируем ровно в ширину экрана;
+    // макетный статус-бар не нужен (у телефона свой) — поднимаем всё на MOBILE_TOP,
+    // чтобы до адресной строки на «Главной» оставалось ~20 px, а низ был у края экрана
+    const MOBILE_TOP = 50;
     const k = innerWidth / 402;
     device._k = k;
-    device.style.transform = `scale(${k})`;
-    device.style.height = `${innerHeight / k}px`;
+    device.style.transform = `scale(${k}) translateY(-${MOBILE_TOP}px)`;
+    device.style.height = `${innerHeight / k + MOBILE_TOP}px`;
   } else {
     device.style.height = '874px';
     const k = Math.min(1, (innerHeight - 60) / 874, (innerWidth - 60) / 402);
