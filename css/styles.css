@@ -1,0 +1,133 @@
+/* ===== Токены из Figma (коллекция «Urbanfit») ===== */
+:root {
+  --text-dark-primary: #f7f9fa;
+  --text-light-primary: #191c1f;
+  --text-light-secondary: #66707a;
+  --text-action: #3c71af;
+  --text-positive: #0eaa30;
+  --graphic-dark-primary: #e5e8eb;
+  --graphic-light-primary: #262a2e;
+  --graphic-light-secondary: #66707a;
+  --graphic-light-tertiary: #7f8c99;
+  --graphic-light-disable: #d9dce0;
+  --graphic-light-action: #5e98d1;
+  --bg-dark-primary: #0d0e0f;
+  --bg-light-primary: #ffffff;
+  --bg-light-secondary: #f7f9fa;
+  --bg-light-disable: #f7f9fa;
+  --bg-light-action-secondary: #f0f6fb;
+  --bg-positive-secondary: #d8f3de;
+  --global-white: #ffffff;
+  --global-grey-150: #d9dce0;
+  --global-grey-200: #ccd1d6;
+  --global-red-500: #db3e49;
+  --global-brand-200: #e0eff8;
+
+  --font: 'Wix Madefor Display', system-ui, sans-serif;
+  --font-sf: -apple-system, 'SF Pro Text', 'SF Pro', system-ui, sans-serif;
+  --ease-ios: cubic-bezier(.32, .72, 0, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font);
+  font-feature-settings: "lnum" 1, "pnum" 1;
+  background: #e9ecef;
+  color: var(--text-light-primary);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+img { display: block; max-width: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-align: left; }
+p { margin: 0; }
+
+/* ===== Типографика (текстовые стили Figma) ===== */
+.t-l-b { font-size: 20px; line-height: 24px; font-weight: 600; }
+.t-m-b { font-size: 16px; line-height: 20px; font-weight: 600; }
+.t-m   { font-size: 16px; line-height: 20px; font-weight: 400; }
+.t-s-b { font-size: 12px; line-height: 16px; font-weight: 600; }
+.t-s   { font-size: 12px; line-height: 16px; font-weight: 400; }
+.t-xs  { font-size: 10px; line-height: 16px; font-weight: 400; }
+.c-sec { color: var(--text-light-secondary); }
+.c-dark { color: var(--text-dark-primary); }
+.nowrap { white-space: nowrap; }
+
+/* ===== Устройство: ПК — рамка iPhone, смартфон — во весь экран ===== */
+.stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+.device {
+  position: relative; width: 402px; height: 874px; flex: none;
+  border-radius: 68px; padding: 0; transform-origin: center center;
+  box-shadow: 0 0 0 12px #1b1d20, 0 0 0 14px #3a3e44, 0 40px 80px rgba(0,0,0,.35);
+}
+.phone {
+  position: absolute; inset: 0; overflow: hidden; border-radius: 56px;
+  background: var(--bg-light-secondary); isolation: isolate;
+}
+body.mobile { background: var(--bg-light-secondary); }
+body.mobile .stage { align-items: flex-start; justify-content: flex-start; }
+body.mobile .device { box-shadow: none; border-radius: 0; transform-origin: top left; }
+body.mobile .phone { border-radius: 0; }
+/* на телефоне свой статус-бар и полоска «домой» — макетные прячем */
+body.mobile .statusbar > *, body.mobile .homebar { visibility: hidden; }
+
+.screens { position: absolute; inset: 0; }
+.screen {
+  position: absolute; inset: 0; overflow: hidden; background: var(--bg-light-secondary);
+  will-change: transform;
+}
+.scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; overscroll-behavior: contain; }
+.scroll::-webkit-scrollbar, .hscroll::-webkit-scrollbar { display: none; }
+.hscroll { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; }
+
+/* переходы экранов как в iOS */
+.screen.anim-in-right  { animation: inRight .45s var(--ease-ios) both; z-index: 2; }
+.screen.anim-out-left  { animation: outLeft .45s var(--ease-ios) both; z-index: 1; }
+.screen.anim-in-left   { animation: inLeft .45s var(--ease-ios) both; z-index: 1; }
+.screen.anim-out-right { animation: outRight .45s var(--ease-ios) both; z-index: 2; }
+.screen.anim-fade-in   { animation: fadeIn .25s ease both; z-index: 2; }
+@keyframes inRight  { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes outLeft  { from { transform: none; } to { transform: translateX(-30%); filter: brightness(.85); } }
+@keyframes inLeft   { from { transform: translateX(-30%); filter: brightness(.85); } to { transform: none; } }
+@keyframes outRight { from { transform: none; } to { transform: translateX(100%); } }
+@keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
+
+/* ===== Статус-бар iPhone 16 ===== */
+.statusbar {
+  position: absolute; top: 0; left: 0; width: 402px; height: 61.846px; z-index: 50;
+  display: flex; align-items: center; justify-content: center; pointer-events: none;
+  color: var(--global-white);
+}
+.statusbar.dark { color: var(--text-light-primary); }
+.sb-side { flex: 1 0 0; height: 61.846px; display: flex; align-items: center; justify-content: center; padding: 12.369px 43.292px; gap: 4.123px; }
+.sb-side.right { padding: 12.369px 28.862px; gap: 10.308px; }
+.sb-time { width: 36.077px; text-align: center; font-family: var(--font-sf); font-weight: 600; font-size: 17.52px; line-height: 14.431px; letter-spacing: -.5px; }
+.sb-island { width: 125.754px; height: 37.108px; border-radius: 32.985px; background: var(--global-white); position: relative; flex: none; }
+.sb-island img { position: absolute; left: 101.02px; top: 12.37px; width: 12.369px; height: 12.369px; }
+.sb-ico { width: 14.431px; height: 14.431px; }
+.sb-net { width: 18.554px; height: 14.431px; position: relative; }
+.sb-net img { position: absolute; inset: 7.14% -2.78% 3.57% 0; width: auto; height: auto; }
+.sb-data { width: 18.554px; height: 14.431px; }
+.sb-bat { width: 27.831px; height: 14.431px; position: relative; }
+.sb-bat > img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sb-bat .fill { inset: 0 63.41% 0 0; width: auto; }
+.sb-bat span { position: absolute; left: 13.4px; top: 7.22px; transform: translate(-50%, -50%); font-family: var(--font-sf); font-weight: 700; font-size: 11.34px; line-height: 14.431px; letter-spacing: -.5px; color: var(--global-white); }
+.statusbar.dark .sb-island { background: #000; }
+.statusbar.dark .sb-bat span { color: #000; }
+.statusbar.dark .sb-ico, .statusbar.dark .sb-net img, .statusbar.dark .sb-data, .statusbar.dark .sb-bat > img:not(.fill) { filter: invert(1); }
+
+/* полоска «домой» */
+.homebar { position: absolute; left: 0; bottom: 0; width: 402px; height: 35.046px; z-index: 50; pointer-events: none; }
+.homebar i { position: absolute; left: 50%; top: 21.65px; transform: translateX(-50%); width: 123.692px; height: 5.154px; border-radius: 5.154px; background: #191c1f; }
+.homebar.light i { background: var(--global-white); }
+
+/* ===== Нижнее меню (компонент Navigation) ===== */
+.navbar { position: absolute; left: -2px; bottom: -1px; width: 406px; height: 116px; z-index: 20; }
+.navbar .bg { position: absolute; left: 0; top: 0; width: 424px; height: 140px; }
+.nav-item { position: absolute; top: 0; height: 116px; }
+.nav-item img { position: absolute; top: 40px; width: 24px; height: 24px; }
+.nav-item span { position: absolute; top: 64px; white-space: nowrap; font-size: 10px; line-height: 16px; color: var(--text-light-secondary); }
+.nav-item.active span { color: var(--text-action); }
+.nav-qr .circle { position: absolute; left: 176px; top: 8px; width: 56px; height: 56px; }
+.nav-qr .qr { position: absolute; left: 192px; top: 24px; width: 24px; height: 24px; }
+.nav-qr span { left: 175px; width: 56px; text-align: center; }

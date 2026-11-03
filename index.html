@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0d0e0f">
+  <title>UrbanFit — прототип</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=39">
+  <link rel="stylesheet" href="css/screens.css?v=39">
+</head>
+<body>
+  <!-- На ПК экран в рамке iPhone, на смартфоне — сразу во весь экран (класс ставит app.js) -->
+  <div class="stage">
+    <div class="device">
+      <div class="phone" id="phone">
+        <div class="screens" id="screens"></div>
+        <div class="overlay-layer" id="overlay"></div>
+        <div class="statusbar" id="statusbar"></div>
+        <div class="homebar"><i></i></div>
+      </div>
+    </div>
+  </div>
+  <script src="js/dates.js?v=39"></script>
+  <script src="js/ui.js?v=39"></script>
+  <script src="js/screens.js?v=39"></script>
+  <script src="js/sheets.js?v=39"></script>
+  <script src="js/app.js?v=39"></script>
+</body>
+</html>
