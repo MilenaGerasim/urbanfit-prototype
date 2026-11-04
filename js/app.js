@@ -26,6 +26,7 @@ function build(name, params) {
   const make = Screens[name];
   if (!make) { console.warn('Нет экрана', name); return null; }
   const def = make(params || {});
+  track(name);
   const el = document.createElement('div');
   el.className = 'screen';
   el.dataset.name = name;
@@ -136,6 +137,7 @@ function enableSwipeDown(el) {
 
 function openSheet(name, params = {}) {
   const def = Sheets[name](params);
+  track('sheet-' + name);
   let sheet = $overlay.querySelector('.bsheet');
   if (!sheet) {
     $overlay.innerHTML = `<div class="dim"></div><div class="bsheet"><div class="ind"></div></div>`;
@@ -163,6 +165,7 @@ function openSheet(name, params = {}) {
 function openCard(html, mount, dismissFn) {
   const show = () => {
     $overlay.innerHTML = `<div class="dim"></div><div class="fcard">${html}</div>`;
+    track('card-' + $overlay.querySelector('.fcard .t-l-b').textContent.trim());
     onDismiss = dismissFn || null;
     $overlay.querySelector('.dim').addEventListener('click', dismiss);
     if (mount) mount($overlay.querySelector('.fcard'));
@@ -176,7 +179,7 @@ function closeSheet(after) {
   sheetLocked = false;
   onDismiss = null;
   const top = stack[stack.length - 1];
-  if (top && top.el) setChrome(top.el._def);
+  if (top && top.el) { setChrome(top.el._def); track(top.name); }
   setTimeout(() => { $overlay.innerHTML = ''; after && after(); }, 420);
 }
 
