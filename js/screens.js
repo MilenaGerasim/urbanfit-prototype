@@ -141,6 +141,7 @@ Screens.tariffs = (p) => {
 /* ---------- Выбор дат заморозки ----------
    Доступен ближайший месяц от сегодня: весь период (7–30 дней) должен в него уместиться.
    Первое нажатие — начало (+6 дней автоматически), второе — конец.
+   Края периода можно тянуть пальцем, а даты — вписать вручную в поля «Начало» и «Конец».
    Начало в последние 6 дней окна — подсказка, что 7 дней уже не помещаются.
    При изменении дат можно выбрать и новое начало (не раньше сегодня). */
 Screens.freezeDates = (p) => {
@@ -162,8 +163,8 @@ Screens.freezeDates = (p) => {
     ${UI.appBar('Выберите период', false).replace('class="appbar ', 'class="appbar tall ').replace('</p>', '</p><p class="sub t-m">от 7 до 30 дней</p>')}
     <div class="cal">
       <div class="cal-dates">
-        <div data-box="start"><p class="t-s c-sec">Начало</p><p class="t-m-b v"></p></div>
-        <div data-box="end"><p class="t-s c-sec">Конец</p><p class="t-m-b v"></p></div>
+        <div data-box="start"><p class="t-s c-sec">Начало</p><input class="t-m-b v" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="ДД.ММ.ГГГГ"></div>
+        <div data-box="end"><p class="t-s c-sec">Конец</p><input class="t-m-b v" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="ДД.ММ.ГГГГ"></div>
       </div>
       <div class="cal-wd t-m">${['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((d, i) => `<p style="left:${12 + COLW * i}px">${d}</p>`).join('')}</div>
       <div class="cal-scroll"></div>
@@ -200,17 +201,52 @@ Screens.freezeDates = (p) => {
           }
           return `<div class="month" style="height:${rows * 40 + 32}px"><p class="mt t-m-b">${D.MONTHS[mo]}</p>${rng}${cells}</div>`;
         }).join('');
-        el.querySelector('[data-box="start"] .v').textContent = D.wd(start);
-        el.querySelector('[data-box="end"] .v').textContent = D.wd(end);
+        // поле, в которое сейчас вписывают дату, не трогаем
+        const sIn = el.querySelector('[data-box="start"] .v'), eIn = el.querySelector('[data-box="end"] .v');
+        if (document.activeElement !== sIn) sIn.value = D.wd(start);
+        if (document.activeElement !== eIn) eIn.value = D.wd(end);
         el.querySelector('[data-box="start"]').classList.toggle('focus', phase === 'start');
         el.querySelector('[data-box="end"]').classList.toggle('focus', phase === 'end');
         el.querySelector('[data-n]').textContent = `Выбрано ${days} ${plural(days, ['день', 'дня', 'дней'])}`;
         const dc = el.querySelector('[data-disc]');
         dc.textContent = `- ${disc}%`; dc.style.display = disc ? '' : 'none';
         el.querySelector('[data-price]').innerHTML = `${money(price)}&nbsp;₽`;
-        el.querySelector('[data-continue] span').innerHTML = `Продолжить · ${money(price)}&nbsp;₽`;
+        // при изменении дат на кнопке — разница с уже оплаченным, а не полная цена (иначе кажется, что платить заново)
+        const diff = edit ? price - S.freeze.price : price;
+        el.querySelector('[data-continue] span').innerHTML = !edit ? `Продолжить · ${money(price)}&nbsp;₽`
+          : diff > 0 ? `К оплате · ${money(diff)}&nbsp;₽`
+          : diff < 0 ? `К возврату · ${money(-diff)}&nbsp;₽` : 'Продолжить';
       };
+      const redraw = () => { const top = box.scrollTop; render(); box.scrollTop = top; };
+
+      // Края периода тянутся пальцем: схватили кружок начала или конца — ведём по дням
+      let drag = null, dragged = false;
+      box.addEventListener('pointerdown', e => {
+        const c = e.target.closest('.day.end'); if (!c) return;
+        drag = D.same(new Date(+c.dataset.d), start) ? 'start' : 'end'; dragged = false;
+        box.setPointerCapture(e.pointerId); box.classList.add('dragging');
+      });
+      box.addEventListener('pointermove', e => {
+        if (!drag) return;
+        const hit = document.elementFromPoint(e.clientX, e.clientY);
+        const c = hit && hit.closest && hit.closest('.day'); if (!c) return;
+        const d = new Date(+c.dataset.d);
+        if (drag === 'start') {
+          // не раньше сегодня, минимум 7 и максимум 30 дней до конца
+          if (d < today || D.diffDays(d, end) + 1 < FREEZE.minDays || D.diffDays(d, end) + 1 > FREEZE.maxDays || D.same(d, start)) return;
+          start = d;
+        } else {
+          if (D.diffDays(start, d) + 1 < FREEZE.minDays || d > maxEnd(start) || D.same(d, end)) return;
+          end = d;
+        }
+        dragged = true; phase = 'start'; redraw();
+      });
+      const dragEnd = () => { if (!drag) return; drag = null; box.classList.remove('dragging'); };
+      box.addEventListener('pointerup', dragEnd);
+      box.addEventListener('pointercancel', dragEnd);
+
       box.addEventListener('click', e => {
+        if (dragged) { dragged = false; return; } // это было перетаскивание, а не нажатие
         const c = e.target.closest('.day'); if (!c || c.classList.contains('off')) return;
         const d = new Date(+c.dataset.d);
         if (phase === 'start' || d < start) {
@@ -221,7 +257,7 @@ Screens.freezeDates = (p) => {
           end = len < FREEZE.minDays ? D.addDays(start, FREEZE.minDays - 1) : d;
           phase = 'start';
         }
-        const top = box.scrollTop; render(); box.scrollTop = top;
+        redraw();
       });
       // подсказка над нижней панелью, исчезает сама
       const toast = text => {
@@ -231,10 +267,43 @@ Screens.freezeDates = (p) => {
         t.classList.add('show');
         clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 3500);
       };
-      el.querySelector('[data-box="start"]').addEventListener('click', () => {
-        phase = 'start'; render();
+      // Поля «Начало» и «Конец»: нажали — можно вписать дату (ДД.ММ.ГГГГ), точки ставятся сами.
+      // Подходящая дата применяется при выходе из поля или по Enter, неподходящая — подсказка и прежнее значение.
+      const parse = v => {
+        const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(v); if (!m) return null;
+        const d = new Date(+m[3], m[2] - 1, +m[1]);
+        return d.getDate() === +m[1] && d.getMonth() === m[2] - 1 ? d : null; // 31.02 и подобное — не дата
+      };
+      const commit = (which, v) => {
+        const d = parse(v);
+        if (!d) { if (v.trim()) toast('Введите дату в формате ДД.ММ.ГГГГ'); return; }
+        if (which === 'start') {
+          if (d < today) { toast(`Заморозка может начаться не раньше сегодняшнего дня, ${D.dm(today)}`); return; }
+          if (d > lastStart) { toast(`Заморозка длится минимум 7 дней и должна уместиться до ${D.dm(winEnd)}. Выберите начало не позже ${D.dm(lastStart)}`); return; }
+          start = d;
+          // конец оставляем, если с новым началом период по-прежнему 7–30 дней
+          if (D.diffDays(start, end) + 1 < FREEZE.minDays || end > maxEnd(start)) end = D.addDays(start, FREEZE.minDays - 1);
+        } else {
+          if (D.diffDays(start, d) + 1 < FREEZE.minDays) { toast(`Заморозка длится минимум 7 дней — конец не раньше ${D.dm(D.addDays(start, FREEZE.minDays - 1))}`); return; }
+          if (d > maxEnd(start)) { toast(`Заморозка длится максимум 30 дней — конец не позже ${D.dm(maxEnd(start))}`); return; }
+          end = d;
+        }
+        phase = 'start';
+      };
+      ['start', 'end'].forEach(which => {
+        const wrap = el.querySelector(`[data-box="${which}"]`), inp = wrap.querySelector('.v');
+        wrap.addEventListener('click', () => { if (document.activeElement !== inp) inp.focus(); });
+        // поле очищается, текущая дата остаётся серой подсказкой; ничего не ввели — дата прежняя
+        inp.addEventListener('focus', () => {
+          phase = which; inp.value = ''; inp.placeholder = D.full(which === 'start' ? start : end); redraw();
+        });
+        inp.addEventListener('input', () => {
+          const n = inp.value.replace(/\D/g, '').slice(0, 8);
+          inp.value = [n.slice(0, 2), n.slice(2, 4), n.slice(4)].filter(Boolean).join('.');
+        });
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
+        inp.addEventListener('blur', () => { commit(which, inp.value); inp.placeholder = 'ДД.ММ.ГГГГ'; redraw(); });
       });
-      el.querySelector('[data-box="end"]').addEventListener('click', () => { phase = 'end'; render(); });
       el.querySelector('[data-continue]').addEventListener('click', () => {
         const days = D.diffDays(start, end) + 1;
         openSheet('freezePay', { start, end, days, edit: !!edit });
@@ -250,7 +319,12 @@ Screens.subscription = () => {
   const frozen = S.freeze && S.freeze.start <= today;
   const checks = BENEFITS.slice(0, t.active).map(([, title]) =>
     `<div class="chk"><img src="${A}ic-check.svg" alt=""><p class="t-m">${title.replace('{friends}', t.friends).replace(' <br>', ' ')}</p></div>`).join('');
-  const pending = S.pending ? `<p class="t-s c-sec">С ${D.full(billingDate())} — тариф «${TARIFFS[S.pending.tariff].name}»</p>` : '';
+  // при переходе на другой тариф со следующего списания крупно — цена текущего тарифа, мелко — какая будет потом
+  const pending = S.pending ? `<p class="t-s c-sec">С ${D.full(billingDate())} — тариф «${TARIFFS[S.pending.tariff].name}» за ${money(TARIFFS[S.pending.tariff].price)}&nbsp;₽/мес</p>` : '';
+  // «Изучить другие тарифы» открывает карусель на соседнем тарифе, а не на своём (на тесте казалось, что нажали не туда);
+  // следующий, а если он «Нео» (недоступен) или его нет — предыдущий
+  const i = TARIFF_ORDER.indexOf(S.sub.tariff), nx = TARIFF_ORDER[i + 1];
+  const neighbor = nx && nx !== 'neo' ? nx : TARIFF_ORDER[i - 1];
   return {
     html: `
     <div class="scroll"><div class="sub-page">
@@ -258,7 +332,7 @@ Screens.subscription = () => {
         <div class="sub-info">
           <div class="sub-top">
             <div class="row-b"><p class="t-l-b c-act">Тариф «${t.name}»</p>${frozen ? '<span class="bchip ice">Заморожен</span>' : '<span class="bchip ok">Активен</span>'}</div>
-            ${UI.price(nextCharge())}
+            ${UI.price(S.pending ? t.price : nextCharge())}
             ${S.saveDiscount ? `<p class="t-s c-sec">Скидка 30% действует на одно списание, далее ${money(TARIFFS[S.sub.tariff].price)}&nbsp;₽/мес</p>` : ''}
             ${pending}
           </div>
@@ -268,7 +342,7 @@ Screens.subscription = () => {
           </div>
           <div class="checks">${checks}</div>
         </div>
-        ${UI.btn('Изучить другие тарифы', `data-go="tariffs" data-params='{"tariff":"${S.sub.tariff}"}'`, 'sec')}
+        ${UI.btn('Изучить другие тарифы', `data-go="tariffs" data-params='{"tariff":"${neighbor}"}'`, 'sec')}
       </div>
       ${UI.freezeCard()}
     </div></div>

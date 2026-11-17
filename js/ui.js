@@ -90,19 +90,20 @@ UI.appBar = (title, dark = true) => `
     <button class="back" data-back aria-label="Назад"><img src="${A}${dark ? 'ic-back.svg' : 'ic-back-dark.svg'}" alt=""></button>
   </div>`;
 
-// Даты заморозки можно изменить только один раз — потом кнопка неактивна, под ней пояснение
+// Даты заморозки можно изменить только один раз: до изменения предупреждаем под кнопкой,
+// после — кнопка неактивна, под ней пояснение
 const editBtn = label => S.freeze.edited
   ? `${UI.btn(label, '', 'sec disable')}<p class="t-s c-sec fz-note">Даты уже изменены, повторно изменить нельзя</p>`
-  : UI.btn(label, 'data-go="freezeDates" data-params=\'{"edit":true}\'', 'sec');
+  : `${UI.btn(label, 'data-go="freezeDates" data-params=\'{"edit":true}\'', 'sec')}<p class="t-s c-sec fz-note">Изменить даты можно только один раз</p>`;
 
 // Блок «Заморозка» (Заморозка_мини): нет / запланирована / идёт / заканчивается
 UI.freezeCard = () => {
   const f = S.freeze, today = D.today();
   const head = chip => `<div class="fz-head"><img src="${A}ic-snow.svg" alt=""><div><p class="t-l-b">Заморозка</p>${chip || ''}</div></div>`;
   if (!f) return `<div class="card fz">${head()}<p class="t-m c-sec" style="margin-top:-4px">Приостановите абонемент на 7–30 дней</p>
-      ${UI.btn('Выбрать период', 'data-go="freezeDates"')}</div>`;
+      ${UI.btn(`Выбрать период · от ${money(FREEZE.minPrice)}&nbsp;₽`, 'data-go="freezeDates"')}</div>`;
   if (f.start > today) return `<div class="card fz">${head(`<span class="bchip ice">Запланирована</span>`)}
-      <div class="fz-plan"><div><img src="${A}ic-calendar-16.svg" alt=""><p class="t-m c-sec">${D.dm(f.start)} — ${D.dm(f.end)}</p></div><p class="t-m-b">${f.days} ${plural(f.days, ['день', 'дня', 'дней'])}</p></div>
+      <div class="fz-plan"><div><img src="${A}ic-calendar-16.svg" alt=""><p class="t-m c-sec">${D.dm(f.start)} – ${D.dm(f.end)}</p></div><p class="t-m-b">${f.days} ${plural(f.days, ['день', 'дня', 'дней'])}</p></div>
       ${editBtn('Изменить даты')}</div>`;
   const left = D.diffDays(today, f.end) + 1;
   const ending = left <= 3;

@@ -65,11 +65,12 @@ Sheets.payNew = ({ tariff }) => {
 /* Переход на тариф дороже: перерасчёт за неиспользованные дни */
 Sheets.payUpgrade = ({ tariff }) => {
   const t = TARIFFS[tariff], credit = unusedCredit(), total = Math.max(0, t.price - credit);
+  const period = D.diffDays(S.sub.bought, S.sub.billing), unused = period - 1; // как в unusedCredit: потрачен 1 день
   return {
     html: payBlock({
       lines: [['Ежемесячная подписка', `${money(t.price)}&nbsp;₽`], ['Перерасчёт', `-${money(credit)}&nbsp;₽`]],
       total,
-      notes: notesList(['Учтена стоимость неиспользованного периода текущего тарифа', RENEW.replace(' <br>', ' ')]),
+      notes: notesList([`Из суммы вычтены ${unused} неиспользованных ${plural(unused, ['дня', 'дней', 'дней'])} тарифа «${TARIFFS[S.sub.tariff].name}»`, RENEW.replace(' <br>', ' ')]),
       btn: `Оплатить · ${money(total)}&nbsp;₽`,
     }),
     mount(body) {
@@ -147,14 +148,15 @@ function feeCard() {
 }
 
 /* ---------- Переход на тариф дешевле ---------- */
-// «Сменить тариф?» — Да / Нет
+// «Сменить тариф?» — Да / Нет. «Нет» просто закрывает окно: пользователь остаётся в карусели тарифов
+// (на тесте «Нет» нажимали, чтобы закрыть окно, и неожиданно попадали на главную)
 function askDowngrade(tariff) {
   openCard(`
     <div class="tx"><p class="t-l-b">Сменить тариф?</p><p class="t-m">Все преимущества действующего тарифа перестанут действовать</p></div>
     <div class="btns">${UI.btn('Да', 'data-yes', 'sec')}${UI.btn('Нет', 'data-no')}</div>`,
   card => {
     card.querySelector('[data-yes]').addEventListener('click', () => closeSheet(() => openSheet('reason', { tariff })));
-    card.querySelector('[data-no]').addEventListener('click', () => keptCard(false));
+    card.querySelector('[data-no]').addEventListener('click', () => closeSheet());
   });
 }
 
@@ -187,11 +189,12 @@ Sheets.reason = ({ tariff }) => ({
   },
 });
 
+// Сумма со скидкой видна сразу — на тесте спрашивали «а сколько он будет стоить?»
 Sheets.discount = ({ tariff }) => ({
   html: `<div class="result">
       <div class="res-in">
         <img class="pic" src="${A}img-discount.png" width="612" height="490" alt="">
-        <div class="txt"><p class="h5">Сохраните тариф <br>со скидкой 30%</p><p class="t-m" style="width:370px">Оставайтесь с тарифом ещё на месяц <br>и пользуйтесь всеми его преимуществами</p></div>
+        <div class="txt"><p class="h5">Сохраните тариф <br>со скидкой 30%</p><p class="t-m" style="width:370px">Следующий месяц — <b>${money(Math.round(TARIFFS[S.sub.tariff].price * 0.7))}&nbsp;₽</b> вместо ${money(TARIFFS[S.sub.tariff].price)}&nbsp;₽ <br>со всеми преимуществами тарифа</p></div>
       </div>
       <div class="btns">${UI.btn('Сохранить тариф', 'data-keep')}${UI.btn('Продолжить смену тарифа', 'data-go-on', 'sec')}</div>
     </div>`,
