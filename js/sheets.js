@@ -25,9 +25,18 @@ const payBlock = ({ title = 'Оплата', lines, sumLabel = 'К оплате',
     <p class="offer t-s">Нажимая на кнопку, вы соглашаетесь <br>с <b>Договором оферты</b></p>
   </div>`;
 
+// Пояснения под итогом во всех оплатах — серые, как в макете (синий brand/700 в оплате не прижился).
+// Последнее слово привязано к предыдущему, чтобы оно не висело одно на новой строке («…тарифа / «Сити»»).
+const noOrphan = s => s.replace(/ (?=[^ <>]+$)/, '&nbsp;');
 const notesList = items => items.length === 1
-  ? `<p class="t-s c-sec">${items[0]}</p>`
-  : `<ul class="t-s">${items.map(i => `<li>${i}</li>`).join('')}</ul>`;
+  ? `<p class="t-s c-sec">${noOrphan(items[0])}</p>`
+  : `<ul class="t-s">${items.map(i => `<li>${noOrphan(i)}</li>`).join('')}</ul>`;
+
+// «через месяц — 23.12.2026», когда до даты месяц (28–31 день), иначе «через 12 дней — …»
+const fromNow = date => {
+  const n = D.diffDays(D.today(), date);
+  return `${n >= 28 && n <= 31 ? 'через месяц' : `через ${n} ${plural(n, ['день', 'дня', 'дней'])}`}&nbsp;— ${D.full(date)}`;
+};
 
 // Промокод: ошибка появляется под полем, шторка растёт вверх (низ остаётся на 35 px)
 const mountPromo = body => {
@@ -137,6 +146,17 @@ Sheets.freezePay = (p) => {
   };
 };
 
+// Перед оплатой новых дат — окно о правиле «один раз»: мелкую подпись на тесте не замечали (0 из 2)
+function askFreezeEdit(p) {
+  openCard(`
+    <div class="tx"><p class="t-l-b">Изменить даты?</p><p class="t-m">Изменить даты заморозки можно только один раз — после этого поменять их снова не&nbsp;получится</p></div>
+    <div class="btns">${UI.btn('Отмена', 'data-no', 'sec')}${UI.btn('Изменить', 'data-yes')}</div>`,
+  card => {
+    card.querySelector('[data-yes]').addEventListener('click', () => closeSheet(() => openSheet('freezePay', p)));
+    card.querySelector('[data-no]').addEventListener('click', () => closeSheet());
+  });
+}
+
 /* ---------- Вступительный взнос ---------- */
 // Упрощённый пересказ п. 4.2.1 договора с сайта URBANFIT
 function feeCard() {
@@ -212,7 +232,7 @@ Sheets.confirmDowngrade = ({ tariff }) => {
       title: 'Смена тарифа', promo: false, attr: 'data-ok',
       lines: [['Ежемесячная подписка', `${money(t.price)}&nbsp;₽`]],
       sumLabel: 'Сейчас к оплате', total: 0,
-      notes: notesList([`Первое списание ${money(t.price)}&nbsp;₽ — ${D.full(date)}`, `До этой даты действуют преимущества тарифа «${TARIFFS[S.sub.tariff].name}»`]),
+      notes: notesList([`Первое списание ${fromNow(date)}`, `До этой даты действуют преимущества тарифа «${TARIFFS[S.sub.tariff].name}»`]),
       btn: 'Подтвердить',
     }),
     mount(body) {

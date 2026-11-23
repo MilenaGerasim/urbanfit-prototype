@@ -12,6 +12,13 @@
 .appbar.dark p { color: var(--text-dark-primary); }
 .appbar .back { position: absolute; left: 16px; top: 12px; width: 32px; height: 32px; }
 .appbar .back img { width: 32px; height: 32px; transform: rotate(90deg); }
+/* Светлая шапка при прокрутке: подложка цвета фона под статус-баром и App Bar, снизу плавно растворяется,
+   чтобы текст не наезжал на заголовок (класс shade ставит app.js, когда список прокручен) */
+/* сплошная часть заканчивается в 16 px под буквами заголовка (низ букв ≈ 94 px от верха экрана), дальше 24 px растворения */
+.appbar:not(.dark)::before { content: ''; position: absolute; z-index: -1; left: 0; right: 0; top: -54px; height: 134px;
+  background: linear-gradient(to bottom, var(--bg-light-secondary) 110px, rgba(247, 249, 250, 0) 134px);
+  opacity: 0; transition: opacity .2s; pointer-events: none; }
+.appbar.shade::before { opacity: 1; }
 
 /* ===================== Тарифы (карусель) ===================== */
 .tariffs { background: var(--bg-dark-primary); }
@@ -148,6 +155,8 @@
 
 /* ===================== Ваш абонемент ===================== */
 .c-act { color: var(--text-action); }
+/* Важные мелкие подписи в «Ваш абонемент» (будущий тариф, скидка, «один раз»): brand/700 вместо серого — после 2-го раунда теста их не замечали */
+.c-note { color: var(--global-brand-700); }
 .sub-page { padding: 118px 0 140px; display: flex; flex-direction: column; gap: 8px; }
 .card { background: var(--bg-light-primary); border-radius: 24px; padding: 16px; display: flex; flex-direction: column; width: 402px; }
 .card.sub { gap: 20px; }

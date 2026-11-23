@@ -306,7 +306,8 @@ Screens.freezeDates = (p) => {
       });
       el.querySelector('[data-continue]').addEventListener('click', () => {
         const days = D.diffDays(start, end) + 1;
-        openSheet('freezePay', { start, end, days, edit: !!edit });
+        const p = { start, end, days, edit: !!edit };
+        if (edit) askFreezeEdit(p); else openSheet('freezePay', p);
       });
       render();
     },
@@ -320,7 +321,7 @@ Screens.subscription = () => {
   const checks = BENEFITS.slice(0, t.active).map(([, title]) =>
     `<div class="chk"><img src="${A}ic-check.svg" alt=""><p class="t-m">${title.replace('{friends}', t.friends).replace(' <br>', ' ')}</p></div>`).join('');
   // при переходе на другой тариф со следующего списания крупно — цена текущего тарифа, мелко — какая будет потом
-  const pending = S.pending ? `<p class="t-s c-sec">С ${D.full(billingDate())} — тариф «${TARIFFS[S.pending.tariff].name}» за ${money(TARIFFS[S.pending.tariff].price)}&nbsp;₽/мес</p>` : '';
+  const pending = S.pending ? `<p class="t-s c-note">С ${D.full(billingDate())} — тариф «${TARIFFS[S.pending.tariff].name}» за&nbsp;${money(TARIFFS[S.pending.tariff].price)}&nbsp;₽/мес</p>` : '';
   // «Изучить другие тарифы» открывает карусель на соседнем тарифе, а не на своём (на тесте казалось, что нажали не туда);
   // следующий, а если он «Нео» (недоступен) или его нет — предыдущий
   const i = TARIFF_ORDER.indexOf(S.sub.tariff), nx = TARIFF_ORDER[i + 1];
@@ -333,7 +334,7 @@ Screens.subscription = () => {
           <div class="sub-top">
             <div class="row-b"><p class="t-l-b c-act">Тариф «${t.name}»</p>${frozen ? '<span class="bchip ice">Заморожен</span>' : '<span class="bchip ok">Активен</span>'}</div>
             ${UI.price(S.pending ? t.price : nextCharge())}
-            ${S.saveDiscount ? `<p class="t-s c-sec">Скидка 30% действует на одно списание, далее ${money(TARIFFS[S.sub.tariff].price)}&nbsp;₽/мес</p>` : ''}
+            ${S.saveDiscount ? `<p class="t-s c-note">Скидка 30% действует на одно списание, далее&nbsp;${money(TARIFFS[S.sub.tariff].price)}&nbsp;₽/мес</p>` : ''}
             ${pending}
           </div>
           <div class="sub-meta">
@@ -348,6 +349,31 @@ Screens.subscription = () => {
     </div></div>
     ${UI.appBar('Ваш абонемент', false)}
     ${UI.navbar()}`,
+    // Длинный список преимуществ (у «Мегаполиса» 10 пунктов) прятал блок «Заморозка» за первым экраном —
+    // на тесте его не нашли. Если шапка «Заморозки» не видна над меню, один раз за сессию страница
+    // сама слегка подъезжает вверх и возвращается — видно, что ниже есть ещё блок. На высоком экране подсказки нет.
+    mount(el) {
+      setTimeout(() => { // экран уже на месте (анимация входа ≈ 460 мс) — можно мерить
+        if (S.subScrollHinted) return;
+        const page = el.querySelector('.sub-page'), sc = el.querySelector('.scroll');
+        const fz = el.querySelector('.card.fz'), nav = el.querySelector('.navbar');
+        if (!page || !fz || !nav || sc.scrollTop > 0) return;
+        const k = el.getBoundingClientRect().height / el.offsetHeight || 1; // масштаб на телефоне
+        const need = (fz.getBoundingClientRect().top - nav.getBoundingClientRect().top) / k + 72; // 72 — шапка «Заморозки» с отступом
+        if (need <= 0) return;
+        S.subScrollHinted = true;
+        const shift = Math.min(need + 16, 160);
+        const bar = el.querySelector('.appbar');
+        bar.classList.add('shade'); // карточка подъезжает под шапку — нужна та же подложка, что при прокрутке
+        page.animate([
+          { transform: 'translateY(0)' },
+          { transform: `translateY(-${shift}px)`, offset: .45 },
+          { transform: `translateY(-${shift}px)`, offset: .6 },
+          { transform: 'translateY(0)' },
+        ], { duration: 1400, easing: 'cubic-bezier(.45, 0, .25, 1)' })
+          .finished.then(() => bar.classList.toggle('shade', sc.scrollTop > 2));
+      }, 700);
+    },
   };
 };
 

@@ -22,6 +22,14 @@ const $screens = document.getElementById('screens');
 const $status = document.getElementById('statusbar');
 $status.innerHTML = UI.statusbar();
 
+// Светлая шапка: когда страница прокручена, под App Bar появляется подложка цвета фона (css: .appbar.shade)
+document.addEventListener('scroll', e => {
+  const sc = e.target;
+  if (!(sc instanceof Element) || !sc.classList.contains('scroll')) return;
+  const bar = sc.closest('.screen')?.querySelector(':scope > .appbar:not(.dark)');
+  if (bar) bar.classList.toggle('shade', sc.scrollTop > 2);
+}, true);
+
 function build(name, params) {
   const make = Screens[name];
   if (!make) { console.warn('Нет экрана', name); return null; }

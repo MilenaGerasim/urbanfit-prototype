@@ -93,8 +93,8 @@ UI.appBar = (title, dark = true) => `
 // Даты заморозки можно изменить только один раз: до изменения предупреждаем под кнопкой,
 // после — кнопка неактивна, под ней пояснение
 const editBtn = label => S.freeze.edited
-  ? `${UI.btn(label, '', 'sec disable')}<p class="t-s c-sec fz-note">Даты уже изменены, повторно изменить нельзя</p>`
-  : `${UI.btn(label, 'data-go="freezeDates" data-params=\'{"edit":true}\'', 'sec')}<p class="t-s c-sec fz-note">Изменить даты можно только один раз</p>`;
+  ? `${UI.btn(label, '', 'sec disable')}<p class="t-s c-note fz-note">Даты уже изменены, повторно изменить нельзя</p>`
+  : `${UI.btn(label, 'data-go="freezeDates" data-params=\'{"edit":true}\'', 'sec')}<p class="t-s c-note fz-note">Изменить даты можно только один раз</p>`;
 
 // Блок «Заморозка» (Заморозка_мини): нет / запланирована / идёт / заканчивается
 UI.freezeCard = () => {
