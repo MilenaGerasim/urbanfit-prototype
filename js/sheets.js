@@ -103,7 +103,7 @@ const ONCE_BUY = 'После покупки даты заморозки можн
 const applyFreeze = ({ start, end, days, edit, refund = 0 }) => {
   S.freeze = { start, end, days, price: freezePrice(days), edited: !!edit }; // edited — даты уже меняли (второй раз нельзя)
   const now = start <= D.today();
-  const back = refund ? ` <br>Разница ${money(refund)}&nbsp;₽ вернётся на карту в&nbsp;течение 3 рабочих дней` : '';
+  const back = refund ? ` <br>Разница ${money(refund)}&nbsp;₽ вернётся на карту <span class="nowrap">в&nbsp;течение 3 рабочих дней</span>` : '';
   let title, text;
   if (edit) {
     title = 'Даты заморозки изменены';
@@ -113,7 +113,8 @@ const applyFreeze = ({ start, end, days, edit, refund = 0 }) => {
   } else {
     title = 'Заморозка успешно приобретена'; text = `Она автоматически активируется <br>с <b>${D.short(start)}</b>`;
   }
-  openSheet('success', { title, text });
+  // 330 вместо 314: «Абонемент будет заморожен до 02.12.26» (~317 px) иначе переносит дату на 2-ю строку
+  openSheet('success', { title, text, textWidth: 330 });
 };
 
 // Покупка или изменение дат: дороже — доплата разницы, дешевле — возврат, столько же — без оплаты
