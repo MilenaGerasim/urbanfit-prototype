@@ -358,7 +358,6 @@
 .tfield.bad textarea { border-color: var(--global-red-500); }
 .terr { color: var(--global-red-500); margin-top: 6px; min-height: 0; }
 .terr:empty { display: none; }
-.timg { width: 120px; height: auto; align-self: center; }
 /* «Задание 2 из 5» — напоминание справа в App Bar (тап — текст задания и «пропустить»); на «Главной» левее колокольчика */
 .tpill { position: absolute; z-index: 55; right: 12px; top: 64px; height: 32px; padding: 0 12px; border-radius: 16px;
   background: var(--bg-light-primary); color: var(--text-light-secondary); font-size: 12px; line-height: 32px; font-weight: 600;
@@ -370,4 +369,5 @@
   background: var(--graphic-light-action); color: var(--global-white); font-size: 16px; line-height: 44px; font-weight: 600; white-space: nowrap;
   box-shadow: 0 6px 20px rgba(60,113,175,.35); opacity: 0; transform: translate(-50%, 12px); pointer-events: none; transition: opacity .2s, transform .25s var(--ease-ios); }
 .tback.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.tkitten { width: 240px; height: auto; border-radius: 16px; align-self: center; }
 .tskip { align-self: center; color: var(--text-light-secondary); text-decoration: underline; text-underline-offset: 3px; margin-top: -8px; }

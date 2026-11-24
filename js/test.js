@@ -34,7 +34,7 @@ const TEST_TASKS = [
   {
     id: 'downgrade',
     text: 'Теперь вы хотите платить меньше. Перейдите на&nbsp;самый недорогой тариф',
-    q: 'Сколько стоит ваш абонемент сейчас и сколько он будет стоить дальше? С какого числа это изменится?',
+    q: 'Сколько стоит ваш абонемент сейчас и&nbsp;сколько он будет стоить дальше? С&nbsp;какого числа это изменится?',
     ensure: () => { if (!S.sub || !isSpa(S.sub.tariff)) S.sub = sub('megapolis'); },
     // согласился на скидку вместо смены тарифа — тоже конец сценария (в Clarity видно, что выбрал)
     done: () => !!S.pending || S.saveDiscount,
@@ -48,8 +48,8 @@ const TEST_TASKS = [
   },
   {
     id: 'freezeEdit',
-    text: 'Планы поменялись: вы уезжаете уже сегодня. Перенесите начало паузы на&nbsp;сегодня',
-    q: 'Сможете ли вы потом ещё раз поменять даты паузы? Почему вы так думаете?',
+    text: 'Планы поменялись: вы&nbsp;уезжаете уже сегодня. Перенесите начало паузы на&nbsp;сегодня',
+    q: 'Сможете ли вы потом ещё раз поменять даты паузы? Почему <span class="nowrap">вы так думаете?</span>',
     ensure: () => {
       if (!S.sub) S.sub = sub('city');
       if (!S.freeze) { const start = D.addDays(D.today(), 7), days = 14;
@@ -121,11 +121,11 @@ function sub(tariff) { const t = D.today(); return { tariff, bought: t, billing:
 
   function intro() {
     card(`
-      <div class="tx"><p class="t-l-b">Проверим приложение UrbanFit</p>
+      <div class="tx"><p class="t-l-b">Проверим <span class="nowrap">приложение UrbanFit</span></p>
         <p class="t-m c-sec">${total} коротких заданий — около 10&nbsp;минут. Правильных ответов нет: мы&nbsp;проверяем приложение, а&nbsp;не&nbsp;вас</p></div>
       <div class="tlist t-s">
         <p>Действуйте так, как действовали бы в&nbsp;обычном приложении</p>
-        <p>Следующее задание появится само, когда вы закончите</p>
+        <p>Следующее задание появится само, когда вы&nbsp;закончите</p>
         <p>Деньги не списываются. Если оплата не&nbsp;прошла — попробуйте ещё раз</p>
       </div>
       <div class="btns">${UI.btn('Начать', 'data-ok')}</div>`,
@@ -210,7 +210,7 @@ function sub(tariff) { const t = D.today(); return { tariff, bought: t, billing:
 
   function done() {
     card(`
-      <img class="timg" src="${A}img-success.png" alt="">
+      <img class="tkitten" src="${A}img-kitten.jpg" width="240" height="246" alt="Котёнок со штангой: «сегодня у меня день попы»">
       <div class="tx"><p class="t-l-b">Спасибо!</p><p class="t-m c-sec">Ответы отправлены. Вы очень помогли сделать приложение удобнее</p></div>`);
   }
 
