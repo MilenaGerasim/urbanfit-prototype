@@ -10,11 +10,11 @@
 //    (4 вопроса после заданий + последний общий).
 // 2. ⋮ → «Получить ссылку с заполненными ответами» → вписать что угодно → скопировать ссылку.
 //    В ней будут entry.123456=… — это номера полей.
-// 3. Вписать сюда адрес формы (…/formResponse) и номера полей.
+// 3. Вписать сюда адрес формы (…/formResponse) и номера полей. Подключено 2026-11-24.
 const TEST_FORM = {
-  url: '',      // 'https://docs.google.com/forms/d/e/<ID>/formResponse'
-  code: '',     // 'entry.111'
-  answers: [],  // ['entry.222', 'entry.333', …] — по порядку вопросов
+  url: 'https://docs.google.com/forms/d/e/1FAIpQLSeYXlK6eBF573r8r6jEL1gJjk3PyDcn99iVY6VC3c-KWcac7w/formResponse',
+  code: 'entry.1049290107',
+  answers: ['entry.2066342450', 'entry.2021498407', 'entry.710240063', 'entry.243653338', 'entry.741309879'], // по порядку вопросов
 };
 
 const isSpa = id => id === 'megapolis' || id === 'neo';
@@ -81,12 +81,18 @@ function sub(tariff) { const t = D.today(); return { tariff, bought: t, billing:
   cl('identify', st.code); cl('set', 'respondent', st.code); cl('set', 'mode', 'test');
 
   const QUESTIONS = [...TEST_TASKS.filter(t => t.q).map(t => t.q), FINAL_Q];
+  // Ответ сразу сохраняется в браузере и в Clarity (видно, даже если человек бросил тест на середине)
   function send(qi, text) {
     st.answers[qi] = text; save();
-    cl('set', 'answer' + (qi + 1), text.slice(0, 250)); // запасной вариант — видно в Clarity
-    if (!TEST_FORM.url || !TEST_FORM.answers[qi]) return;
-    const body = new URLSearchParams({ [TEST_FORM.code]: st.code, [TEST_FORM.answers[qi]]: text });
+    cl('set', 'answer' + (qi + 1), text.slice(0, 250));
+  }
+  // В Google Форму — одной строкой со всеми ответами, после последнего вопроса
+  function submitAll() {
+    if (!TEST_FORM.url || st.sent) return;
+    const body = new URLSearchParams({ [TEST_FORM.code]: st.code });
+    TEST_FORM.answers.forEach((e, qi) => body.append(e, st.answers[qi] || '—'));
     fetch(TEST_FORM.url, { method: 'POST', mode: 'no-cors', body }).catch(() => {});
+    st.sent = true; save();
   }
 
   // ---------- слой теста поверх прототипа ----------
@@ -203,7 +209,7 @@ function sub(tariff) { const t = D.today(); return { tariff, bought: t, billing:
         const v = ta.value.trim();
         if (!v && !last) { err.textContent = 'Напишите хотя бы пару слов'; f.classList.add('bad'); return; }
         if (v) send(qi, v);
-        if (last) { st.step = total + 1; save(); done(); } else advance(i);
+        if (last) { st.step = total + 1; save(); submitAll(); done(); } else advance(i);
       });
     });
   }
