@@ -28,6 +28,7 @@ const TEST_TASKS = [
     id: 'upgrade',
     text: 'Вы решили, что спа-зона <span class="nowrap">всё-таки</span> нужна. Перейдите на&nbsp;тариф <span class="nowrap">со спа-зоной</span>',
     q: 'Вы заплатили полную стоимость нового тарифа или&nbsp;меньше? Как вы думаете, почему?',
+    look: false, // сумма видна только в шторке оплаты — в приложении её уже не найти
     ensure: () => { if (!S.sub || isSpa(S.sub.tariff)) S.sub = sub('city'); }, // в разминке купили спа — начинаем с «Сити»
     done: () => isSpa(S.sub.tariff),
   },
@@ -36,13 +37,15 @@ const TEST_TASKS = [
     text: 'Теперь вы хотите платить меньше. Перейдите на&nbsp;самый недорогой тариф',
     q: 'Когда вы начнёте платить по&nbsp;новому тарифу: сразу или позже? <span class="nowrap">Как вы это поняли?</span>',
     ensure: () => { if (!S.sub || !isSpa(S.sub.tariff)) S.sub = sub('megapolis'); },
-    // согласился на скидку вместо смены тарифа — тоже конец сценария (в Clarity видно, что выбрал)
-    done: () => !!S.pending || S.saveDiscount,
+    // согласился на скидку вместо смены тарифа — тоже конец сценария (в Clarity видно, что выбрал),
+    // но вопрос — только после карточки «Все преимущества сохранились» и перехода на главную
+    done: () => !!S.pending || (S.saveDiscount && testScreen === 'home'),
   },
   {
     id: 'freeze',
     text: 'Вы уезжаете. Поставьте абонемент на&nbsp;паузу на&nbsp;2&nbsp;недели, начиная со&nbsp;следующего понедельника',
     q: 'Пауза была платной или бесплатной? Легко&nbsp;ли было найти, где её&nbsp;оформить?',
+    look: false,
     ensure: () => { if (!S.sub) S.sub = sub('city'); S.subScrollHinted = false; },
     done: () => !!S.freeze,
   },
@@ -59,6 +62,8 @@ const TEST_TASKS = [
   },
 ];
 const FINAL_Q = 'Что в приложении показалось вам непонятным или неудобным?';
+
+let testScreen = ''; // последний открытый экран (без шторок и карточек)
 
 // Запасное состояние (если задание пропустили или перезагрузили страницу): абонемент куплен сегодня
 function sub(tariff) { const t = D.today(); return { tariff, bought: t, billing: D.addMonths(t, 1) }; }
@@ -108,6 +113,7 @@ function sub(tariff) { const t = D.today(); return { tariff, bought: t, billing:
   track = name => {
     origTrack(name);
     if (/^(sheet|card)-/.test(name)) return;
+    testScreen = name;
     pill.classList.toggle('on-home', name === 'home');
     check();
   };
@@ -195,13 +201,13 @@ function sub(tariff) { const t = D.today(); return { tariff, bought: t, billing:
     card(`
       <div class="tx">${last ? '<p class="t-s c-sec">Последний вопрос</p>' : label(i)}<p class="t-m-b">${q}</p></div>
       <div class="tfield"><textarea class="t-m" rows="4" placeholder="${last ? 'Можно пропустить' : 'Ваш ответ'}"></textarea><p class="t-s terr"></p></div>
-      <div class="btns">${UI.btn(last ? 'Отправить' : 'Дальше', 'data-ok')}${UI.btn('Посмотреть в приложении', 'data-look', 'sec')}</div>`,
+      <div class="btns">${UI.btn(last ? 'Отправить' : 'Дальше', 'data-ok')}${!last && TEST_TASKS[i].look === false ? '' : UI.btn('Посмотреть в приложении', 'data-look', 'sec')}</div>`,
     c => {
       const ta = c.querySelector('textarea'), err = c.querySelector('.terr'), f = c.querySelector('.tfield');
       ta.value = drafts[qi] || '';
       ta.addEventListener('input', () => { drafts[qi] = ta.value; err.textContent = ''; f.classList.remove('bad'); });
       // свернуть вопрос и полистать приложение; текст ответа сохраняется
-      c.querySelector('[data-look]').addEventListener('click', () => {
+      c.querySelector('[data-look]')?.addEventListener('click', () => {
         hide(); back.classList.add('show'); back.onclick = () => question(i);
         cl('event', 'look-' + qi);
       });
