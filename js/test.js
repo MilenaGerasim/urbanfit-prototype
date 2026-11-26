@@ -1,7 +1,9 @@
 // Тестовый режим без модератора: …/urbanfit-prototype/?test
 // Одна общая ссылка. Каждый участник получает случайный код (K7F2), он хранится в браузере
 // и ставится меткой в Clarity. Задания идут одной историей (без сброса состояния):
-// оформить абонемент → повысить тариф → понизить → пауза → перенести паузу.
+// оформить абонемент → повысить тариф → пауза → перенести паузу.
+// 2026-11-26: задание «перейти на самый недорогой тариф» убрано (в нём не было правок, поняли 19 из 22);
+// колонки формы не сдвигаем — у каждого вопроса свой номер col, колонка 2 остаётся пустой («—»).
 // Прототип сам понимает, что задание выполнено (тариф сменился, пауза оформлена…),
 // и после возврата на экран показывает вопрос. Ответы с кодом уходят в Google Форму.
 //
@@ -28,23 +30,16 @@ const TEST_TASKS = [
     id: 'upgrade',
     text: 'Вы решили, что спа-зона <span class="nowrap">всё-таки</span> нужна. Перейдите на&nbsp;тариф <span class="nowrap">со спа-зоной</span>',
     q: 'Вы заплатили полную стоимость нового тарифа или&nbsp;меньше? Как вы думаете, почему?',
+    col: 0, // колонка формы «Перерасчёт»
     look: false, // сумма видна только в шторке оплаты — в приложении её уже не найти
     ensure: () => { if (!S.sub || isSpa(S.sub.tariff)) S.sub = sub('city'); }, // в разминке купили спа — начинаем с «Сити»
     done: () => isSpa(S.sub.tariff),
   },
   {
-    id: 'downgrade',
-    text: 'Теперь вы хотите платить меньше. Перейдите на&nbsp;самый недорогой тариф',
-    q: 'Когда вы начнёте платить по&nbsp;новому тарифу: сразу или позже? <span class="nowrap">Как вы это поняли?</span>',
-    ensure: () => { if (!S.sub || !isSpa(S.sub.tariff)) S.sub = sub('megapolis'); },
-    // согласился на скидку вместо смены тарифа — тоже конец сценария (в Clarity видно, что выбрал),
-    // но вопрос — только после карточки «Все преимущества сохранились» и перехода на главную
-    done: () => !!S.pending || (S.saveDiscount && testScreen === 'home'),
-  },
-  {
     id: 'freeze',
     text: 'Вы уезжаете. Поставьте абонемент на&nbsp;паузу на&nbsp;2&nbsp;недели, начиная со&nbsp;следующего понедельника',
     q: 'Пауза была платной или бесплатной? Легко&nbsp;ли было найти, где её&nbsp;оформить?',
+    col: 2,
     look: false,
     ensure: () => { if (!S.sub) S.sub = sub('city'); S.subScrollHinted = false; },
     done: () => !!S.freeze,
@@ -53,6 +48,7 @@ const TEST_TASKS = [
     id: 'freezeEdit',
     text: 'Планы поменялись: вы&nbsp;уезжаете уже сегодня. Перенесите начало паузы на&nbsp;сегодня',
     q: 'Сможете ли вы потом ещё раз поменять даты паузы? Почему <span class="nowrap">вы так думаете?</span>',
+    col: 3,
     ensure: () => {
       if (!S.sub) S.sub = sub('city');
       if (!S.freeze) { const start = D.addDays(D.today(), 7), days = 14;
@@ -62,8 +58,6 @@ const TEST_TASKS = [
   },
 ];
 const FINAL_Q = 'Что в приложении показалось вам непонятным или неудобным?';
-
-let testScreen = ''; // последний открытый экран (без шторок и карточек)
 
 // Запасное состояние (если задание пропустили или перезагрузили страницу): абонемент куплен сегодня
 function sub(tariff) { const t = D.today(); return { tariff, bought: t, billing: D.addMonths(t, 1) }; }
@@ -85,7 +79,7 @@ function sub(tariff) { const t = D.today(); return { tariff, bought: t, billing:
   const cl = (...a) => { if (window.clarity) clarity(...a); };
   cl('identify', st.code); cl('set', 'respondent', st.code); cl('set', 'mode', 'test');
 
-  const QUESTIONS = [...TEST_TASKS.filter(t => t.q).map(t => t.q), FINAL_Q];
+  const FINAL_COL = 4; // номер колонки формы у последнего вопроса
   // Ответ сразу сохраняется в браузере и в Clarity (видно, даже если человек бросил тест на середине)
   function send(qi, text) {
     st.answers[qi] = text; save();
@@ -113,7 +107,6 @@ function sub(tariff) { const t = D.today(); return { tariff, bought: t, billing:
   track = name => {
     origTrack(name);
     if (/^(sheet|card)-/.test(name)) return;
-    testScreen = name;
     pill.classList.toggle('on-home', name === 'home');
     check();
   };
@@ -134,7 +127,7 @@ function sub(tariff) { const t = D.today(); return { tariff, bought: t, billing:
   function intro() {
     card(`
       <div class="tx"><p class="t-l-b">Проверим <span class="nowrap">приложение UrbanFit</span></p>
-        <p class="t-m c-sec">${total} коротких заданий — около 10&nbsp;минут. Правильных ответов нет: мы&nbsp;проверяем приложение, а&nbsp;не&nbsp;вас</p></div>
+        <p class="t-m c-sec">${total} ${plural(total, ['короткое задание', 'коротких задания', 'коротких заданий'])} — около 8&nbsp;минут. Правильных ответов нет: мы&nbsp;проверяем приложение, а&nbsp;не&nbsp;вас</p></div>
       <div class="tlist t-s">
         <p>Действуйте так, как действовали бы в&nbsp;обычном приложении</p>
         <p>Следующее задание появится само, когда вы&nbsp;закончите</p>
@@ -196,7 +189,7 @@ function sub(tariff) { const t = D.today(); return { tariff, bought: t, billing:
 
   const drafts = {};
   function question(i) {
-    const last = i === total, q = last ? FINAL_Q : TEST_TASKS[i].q, qi = QUESTIONS.indexOf(q);
+    const last = i === total, q = last ? FINAL_Q : TEST_TASKS[i].q, qi = last ? FINAL_COL : TEST_TASKS[i].col;
     cl('event', last ? 'question-final' : 'question-' + TEST_TASKS[i].id);
     card(`
       <div class="tx">${last ? '<p class="t-s c-sec">Последний вопрос</p>' : label(i)}<p class="t-m-b">${q}</p></div>
