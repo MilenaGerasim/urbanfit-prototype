@@ -254,8 +254,6 @@ Screens.freezeDates = (p) => {
         if (phase === 'start' || d < start) {
           if (d > lastStart) { toast(`Заморозка длится минимум 7 дней и должна уместиться до ${D.dm(winEnd)}. Выберите начало не позже ${D.dm(lastStart)}`); return; }
           start = d; end = D.addDays(d, FREEZE.minDays - 1); phase = 'end';
-          // на тесте неделю после первого нажатия приняли за окончательный выбор
-          toast('Нажмите на дату окончания, если нужно больше 7 дней');
         } else {
           const len = D.diffDays(start, d) + 1;
           end = len < FREEZE.minDays ? D.addDays(start, FREEZE.minDays - 1) : d;
