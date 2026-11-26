@@ -371,3 +371,4 @@
 .tback.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
 .tkitten { width: 240px; height: auto; border-radius: 16px; align-self: center; }
 .tskip { align-self: center; color: var(--text-light-secondary); text-decoration: underline; text-underline-offset: 3px; margin-top: -8px; }
+

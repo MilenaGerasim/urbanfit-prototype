@@ -90,11 +90,13 @@ UI.appBar = (title, dark = true) => `
     <button class="back" data-back aria-label="Назад"><img src="${A}${dark ? 'ic-back.svg' : 'ic-back-dark.svg'}" alt=""></button>
   </div>`;
 
-// Даты заморозки можно изменить только один раз: до изменения предупреждаем под кнопкой,
-// после — кнопка неактивна, под ней пояснение
-const editBtn = label => S.freeze.edited
-  ? `${UI.btn(label, '', 'sec disable')}<p class="t-s c-note fz-note">Даты уже изменены, повторно изменить нельзя</p>`
-  : `${UI.btn(label, 'data-go="freezeDates" data-params=\'{"edit":true}\'', 'sec')}<p class="t-s c-note fz-note">Изменить даты можно только один раз</p>`;
+// Даты заморозки можно изменить только один раз. Подпись под кнопкой на тесте не считывали (10 из 22 ошиблись),
+// поэтому вместо неё — счётчик «Изменений дат осталось: 1 / 0»; после изменения кнопка неактивна
+const editBtn = label => {
+  const left = S.freeze.edited ? 0 : 1;
+  const cnt = `<p class="t-m c-sec">Изменений дат осталось: <b class="${left ? 'c-act' : ''}">${left}</b></p>`;
+  return cnt + (left ? UI.btn(label, 'data-go="freezeDates" data-params=\'{"edit":true}\'', 'sec') : UI.btn(label, '', 'sec disable'));
+};
 
 // Блок «Заморозка» (Заморозка_мини): нет / запланирована / идёт / заканчивается
 UI.freezeCard = () => {

@@ -195,7 +195,8 @@ function closeSheet(after) {
 function runPayment(branch, onSuccess, retry) {
   openSheet('wait');
   setTimeout(() => {
-    if (!S.failed[branch]) { S.failed[branch] = true; openSheet('fail', { retry }); }
+    // проваливается только самая первая покупка абонемента: на тесте повторные провалы сбивали с толку
+    if (branch === 'new' && !S.failed[branch]) { S.failed[branch] = true; openSheet('fail', { retry }); }
     else onSuccess();
   }, 1500);
 }

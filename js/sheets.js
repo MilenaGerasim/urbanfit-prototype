@@ -77,8 +77,10 @@ Sheets.payUpgrade = ({ tariff }) => {
   const period = D.diffDays(S.sub.bought, S.sub.billing), unused = period - 1; // как в unusedCredit: потрачен 1 день
   return {
     html: payBlock({
-      lines: [['Ежемесячная подписка', `${money(t.price)}&nbsp;₽`], ['Перерасчёт', `-${money(credit)}&nbsp;₽`]],
-      total,
+      // на тесте 7 из 22 решили, что платят полную цену или покупают второй тариф: заголовок о смене и простые строки
+      title: 'Смена тарифа',
+      lines: [[`Тариф «${t.name}»`, `${money(t.price)}&nbsp;₽`], [`Уже оплачено за&nbsp;«${TARIFFS[S.sub.tariff].name}»`, `-${money(credit)}&nbsp;₽`]],
+      sumLabel: 'Доплата', total,
       notes: notesList([`Из суммы вычтены ${unused} неиспользованных ${plural(unused, ['дня', 'дней', 'дней'])} тарифа «${TARIFFS[S.sub.tariff].name}»`, RENEW.replace(' <br>', ' ')]),
       btn: `Оплатить · ${money(total)}&nbsp;₽`,
     }),
@@ -150,8 +152,8 @@ Sheets.freezePay = (p) => {
 // Перед оплатой новых дат — окно о правиле «один раз»: мелкую подпись на тесте не замечали (0 из 2)
 function askFreezeEdit(p) {
   openCard(`
-    <div class="tx"><p class="t-l-b">Изменить даты?</p><p class="t-m">Изменить даты заморозки можно только один раз — после этого поменять их снова не&nbsp;получится</p></div>
-    <div class="btns">${UI.btn('Отмена', 'data-no', 'sec')}${UI.btn('Изменить', 'data-yes')}</div>`,
+    <div class="tx"><p class="t-l-b">Изменить даты можно <br>только один раз</p><p class="t-m">После этого поменять их снова не&nbsp;получится</p></div>
+    <div class="btns">${UI.btn('Отмена', 'data-no', 'sec')}${UI.btn('Изменить окончательно', 'data-yes')}</div>`,
   card => {
     card.querySelector('[data-yes]').addEventListener('click', () => closeSheet(() => openSheet('freezePay', p)));
     card.querySelector('[data-no]').addEventListener('click', () => closeSheet());

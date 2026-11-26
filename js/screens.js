@@ -172,7 +172,7 @@ Screens.freezeDates = (p) => {
     <div class="sticky">
       <div class="dp">
         <div class="days"><p class="t-m-b nowrap" data-n></p><div class="pr"><span class="chip-s t-s-b" data-disc></span><p class="h5" data-price></p></div></div>
-        <p class="t-s c-sec">Чем дольше заморозка, тем выгоднее</p>
+        <p class="t-s c-sec" data-hint></p>
       </div>
       ${UI.btn('', 'data-continue')}
     </div>`,
@@ -209,13 +209,15 @@ Screens.freezeDates = (p) => {
         el.querySelector('[data-box="end"]').classList.toggle('focus', phase === 'end');
         el.querySelector('[data-n]').textContent = `Выбрано ${days} ${plural(days, ['день', 'дня', 'дней'])}`;
         const dc = el.querySelector('[data-disc]');
-        dc.textContent = `- ${disc}%`; dc.style.display = disc ? '' : 'none';
-        el.querySelector('[data-price]').innerHTML = `${money(price)}&nbsp;₽`;
-        // при изменении дат на кнопке — разница с уже оплаченным, а не полная цена (иначе кажется, что платить заново)
+        dc.textContent = `- ${disc}%`; dc.style.display = disc && !edit ? '' : 'none';
+        // при изменении дат — разница с уже оплаченным, а не полная цена (на тесте 200 ₽ приняли за новое списание)
         const diff = edit ? price - S.freeze.price : price;
+        el.querySelector('[data-price]').innerHTML = !edit ? `${money(price)}&nbsp;₽`
+          : `${diff < 0 ? '<span class="t-m c-sec">Возврат</span> ' : ''}${money(Math.abs(diff))}&nbsp;₽`;
+        el.querySelector('[data-hint]').innerHTML = edit ? `Уже оплачено ${money(S.freeze.price)}&nbsp;₽ за&nbsp;${daysTxt(S.freeze.days)}` : 'Чем дольше заморозка, тем выгоднее';
         el.querySelector('[data-continue] span').innerHTML = !edit ? `Продолжить · ${money(price)}&nbsp;₽`
           : diff > 0 ? `К оплате · ${money(diff)}&nbsp;₽`
-          : diff < 0 ? `К возврату · ${money(-diff)}&nbsp;₽` : 'Продолжить';
+          : diff < 0 ? `К возврату · ${money(-diff)}&nbsp;₽` : 'Продолжить · 0&nbsp;₽';
       };
       const redraw = () => { const top = box.scrollTop; render(); box.scrollTop = top; };
 
@@ -252,6 +254,8 @@ Screens.freezeDates = (p) => {
         if (phase === 'start' || d < start) {
           if (d > lastStart) { toast(`Заморозка длится минимум 7 дней и должна уместиться до ${D.dm(winEnd)}. Выберите начало не позже ${D.dm(lastStart)}`); return; }
           start = d; end = D.addDays(d, FREEZE.minDays - 1); phase = 'end';
+          // на тесте неделю после первого нажатия приняли за окончательный выбор
+          toast('Нажмите на дату окончания, если нужно больше 7 дней');
         } else {
           const len = D.diffDays(start, d) + 1;
           end = len < FREEZE.minDays ? D.addDays(start, FREEZE.minDays - 1) : d;
